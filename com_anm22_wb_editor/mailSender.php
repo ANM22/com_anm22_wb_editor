@@ -1,0 +1,28 @@
+<?php
+/*
+ * Author: ANM22
+ * Last modified: 28 Jul 2014 - GMT +2 11:51
+ *
+ * ANM22 Andrea Menghi all rights reserved
+ *
+ */
+
+/* MAIL SENDER */
+$from = $_POST['wb_ms_from'];
+$to = $_POST['wb_ms_to'];
+$obj = $_POST['wb_ms_obj'];
+$msg = $_POST['wb_ms_msg'];
+$redirect = $_POST['wb_ms_redirect'];
+
+$result = @mail($to, $obj, $msg,
+     "From: ".$from."\r\n" .
+     "X-Mailer: PHP/" . phpversion());
+
+$result_msg="";
+if (!$result) {
+	$result_msg = "&ms=failed";
+}
+
+header( "Location: ".$redirect.$result_msg );
+exit;
+?>
