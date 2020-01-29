@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 08 Jul 2019 - GMT +2 20:35
+ * Last modified: 29 Jan 2020 - GMT +1 22:25
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -79,6 +79,8 @@ class com_anm22_wb_editor_page_element_image extends com_anm22_wb_editor_page_el
             if ($this->rwidth) {
                 if (($this->maxWidth != "") and ( $this->maxWidth)) {
                     ?> width="<?= $this->maxWidth ?>"<?
+                } else if (isset($this->page->templateInlineStyles[$this->elementPlugin . "_" . $this->elementClass . "_width"])) {
+                    echo ' width="' . $this->page->templateInlineStyles[$this->elementPlugin . "_" . $this->elementClass . "_width"] . '"';
                 } else {
                     ?> width="600"<?
                 }
