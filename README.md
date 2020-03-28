@@ -1,10 +1,11 @@
 # com_anm22_wb_editor - WebBase plugin
-![version](https://img.shields.io/badge/version-3.9-blue)
+![version](https://img.shields.io/badge/version-3.10-blue)
 
 com_anm22_wb_editor is the main plugins collection of ANM22 WebBase CMS.
 
 ## Plugins included
 *	com_anm22_wb_editor_page_element_box
+*	com_anm22_wb_editor_page_element_button
 *	com_anm22_wb_editor_page_element_contact_form
 *	com_anm22_wb_editor_page_element_download
 *	com_anm22_wb_editor_page_element_events

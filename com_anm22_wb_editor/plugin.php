@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 05 Sep 2018 - GMT +2 17:20
+ * Last modified: 27 Mar 2020 - GMT +1 17:27
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -39,3 +39,6 @@ include_once __DIR__ . '/classes/com_anm22_wb_editor_page_element_contact_form.p
 
 /* BOX */
 include_once __DIR__ . '/classes/com_anm22_wb_editor_page_element_box.php';
+
+/* BUTTON */
+include_once __DIR__ . '/classes/com_anm22_wb_editor_page_element_button.php';
