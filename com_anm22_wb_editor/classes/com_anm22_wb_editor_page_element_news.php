@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 16 Jan 2017 - GMT +1 23:56
+ * Last modified: 09 Jun 2020 - GMT +2 21:39
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -254,9 +254,8 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                                 }
 
                                 if (file_exists("../News/" . $newsId . "/att.pdf")) {
-                                    echo '<div class="news_preview_att"><a href="' . $this->page->getHomeFolderRelativeHTMLURL() . 'News/' . $newsId . '/att.pdf">Download PDF</a></div>';
+                                    echo '<div class="news_preview_att" onclick="location.href=\'' . $this->page->getHomeFolderRelativeHTMLURL() . 'News/' . $newsId . '/att.pdf\'">Download PDF</div>';
                                 }
-                                echo '<div style="clear:both;"></div>';
                             echo '</article>';
                         echo '</a>';
                         
