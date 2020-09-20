@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 11 Jul 2017 - GMT +2 09:52
+ * Last modified: 20 Sep 2020 - GMT +2 10:45
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -46,13 +46,18 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
 
         if ($_POST['wb_contact_form_send']) {
 
-            if (!$_POST['email'] or ( $_POST['email'] == "")) {
+            if (!$_POST['email'] or ($_POST['email'] == "")) {
                 header("Location: ?wb_form_alarm=2");
                 exit;
             }
 
-            if (!$this->email or ( $this->email == "")) {
+            if (!$this->email or ($this->email == "")) {
                 header("Location: ?wb_form_alarm=3");
+                exit;
+            }
+
+            if (!$this->spamFilterCheck($_POST['email'])) {
+                header("Location: ?wb_form_alarm=4");
                 exit;
             }
 
@@ -111,16 +116,16 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
         ?>
         <div class="<?= $this->elementPlugin ?>_<?= $this->elementClass ?><? if (($this->cssClass)and ( $this->cssClass != "")) { ?> <?= $this->cssClass ?><? } ?>">
             <?
-            if ($_GET['wb_form_alarm'] == 2) {
+            if (isset($_GET['wb_form_alarm']) and ($_GET['wb_form_alarm'] == 2)) {
                 ?>
                 <div class="form_response_alarm">Non &egrave; stato inserito correttamente l'indirizzo email.</div>
                 <?
-            } else if ($_GET['wb_form_alarm']) {
+            } else if (isset($_GET['wb_form_alarm']) and $_GET['wb_form_alarm']) {
                 ?>
                 <div class="form_response_alarm">Ops! Non &egrave; stato possibile inviare la tua richiesta, riprova pi&ugrave; tardi.</div>
                 <?
             }
-            if ($_GET['wb_form_ok']) {
+            if (isset($_GET['wb_form_ok']) and $_GET['wb_form_ok']) {
                 ?>
                 <div class="form_response_confirm">La tua richiesta &egrave; stata inoltrata correttamente. Ti risponderemo il prima possibile.</div>
                 <!-- Google Code for Preiscrizione YourBeach Conversion Page -->
@@ -224,7 +229,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
                     <textarea name="notes"></textarea>
                 </div>
                 <div class="form_item_container_checkbox">
-                    <div id="" class="form_item_description">
+                    <div class="form_item_description">
                         <? if ($this->page->getPageLanguage()) { ?>Accetto la privacy policy consultabile a questo <a href="<?= $this->privacy_url ?>">link</a>* <? } else { ?>I accept the privacy policy found at this <a href="<?= $this->privacy_url ?>">link</a>*<? } ?>
                         <input type="checkbox" name="privacy-checkbox" id="form-privacy-checkbox"/>
                     </div>
@@ -257,6 +262,25 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
     public function setHeadingTag($headingTag) {
         $this->headingTag = $headingTag;
         return $this;
+    }
+    
+    /**
+     * Check if the email address is not spam
+     * 
+     * @param string $email Customer email address
+     * @return boolean
+     */
+    protected function spamFilterCheck($email) {
+        if ($email == $this->email) {
+            return false;
+        }
+        if (substr($email,0,7) == 'noreply') {
+            return false;
+        }
+        if (substr($email,0,8) == 'no-reply') {
+            return false;
+        }
+        return true;
     }
     
 }

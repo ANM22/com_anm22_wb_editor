@@ -1,7 +1,9 @@
 <?php
-/*
+/**
+ * @deprecated since version 3.12
+ * 
  * Author: ANM22
- * Last modified: 28 Jul 2014 - GMT +2 11:51
+ * Last modified: 20 Sep 2020 - GMT +2 11:59
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -15,14 +17,13 @@ $msg = $_POST['wb_ms_msg'];
 $redirect = $_POST['wb_ms_redirect'];
 
 $result = @mail($to, $obj, $msg,
-     "From: ".$from."\r\n" .
-     "X-Mailer: PHP/" . phpversion());
+                "From: " . $from . "\r\n" .
+                "X-Mailer: PHP/" . phpversion());
 
-$result_msg="";
+$result_msg = "";
 if (!$result) {
-	$result_msg = "&ms=failed";
+    $result_msg = "&ms=failed";
 }
 
-header( "Location: ".$redirect.$result_msg );
+header("Location: " . $redirect . $result_msg);
 exit;
-?>
