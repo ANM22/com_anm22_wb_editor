@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 20 Sep 2020 - GMT +2 10:45
+ * Last modified: 04 Oct 2020 - GMT +2 12:34
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -103,6 +103,30 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
             }
 
             if (com_anm22_wb_mail_send($from, $to, "", "", $obj, $msg, "plain")) {
+                
+                include "../ANM22WebBase/config/license.php";
+                
+                // BeTasker Contacts integration
+                $data = array();
+                $data['firstName'] = $_POST['name'];
+                $data['lastName'] = $_POST['surname'];
+                $data['email'] = $from;
+                $data['phoneNumber'] = $_POST['phone'];
+                $data['obj'] = $obj;
+                $data['msg'] = $msg;
+
+                $data_string = json_encode($data);
+
+                $ch = curl_init('https://www.anm22.it/app/webbase/api/v2/messages/?license=' . $anm22_wb_license . '&licensePass=' . $anm22_wb_licensePass);                                                                      
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);                                                                  
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);                                                                      
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array(                                                                          
+                    'Content-Type: application/json',                                                                                
+                    'Content-Length: ' . strlen($data_string))                                                                       
+                );
+                $result = curl_exec($ch);
+                
                 header("Location: ?wb_form_ok=1");
                 exit;
             } else {
@@ -278,6 +302,11 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
             return false;
         }
         if (substr($email,0,8) == 'no-reply') {
+            return false;
+        }
+        $domain = $_SERVER['HTTP_HOST'];
+        $domain = str_replace('www.', '', $domain);
+        if (substr($email, strlen($domain) * -1) == $domain) {
             return false;
         }
         return true;
