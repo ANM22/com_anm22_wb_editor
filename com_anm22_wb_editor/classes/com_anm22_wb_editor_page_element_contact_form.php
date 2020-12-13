@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 04 Oct 2020 - GMT +2 12:34
+ * Last modified: 13 Dec 2020 - GMT +1 11:42
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -309,6 +309,25 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
         if (substr($email, strlen($domain) * -1) == $domain) {
             return false;
         }
+        
+        include "../ANM22WebBase/config/license.php";
+                
+        // Spam database check
+        $ch = curl_init('https://www.anm22.it/app/webbase/api/v2/spam-filter/?email=' . $email . '&license=' . $anm22_wb_license . '&licensePass=' . $anm22_wb_licensePass);                                                                      
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");                                                                 
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);                                                                      
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(                                                                          
+            'Content-Type: application/json')                                                                       
+        );
+        $result = curl_exec($ch);
+        
+        if ($result) {
+            $dbCheckResult = json_decode($result, true);
+            if (isset($dbCheckResult['secure']) and !$dbCheckResult['secure']) {
+                return false;
+            }
+        }
+        
         return true;
     }
     
