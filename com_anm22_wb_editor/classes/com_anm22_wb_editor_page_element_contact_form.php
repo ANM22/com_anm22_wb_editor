@@ -44,7 +44,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
             $this->setHeadingTag(htmlspecialchars_decode($xml->headingTag));
         }
 
-        if ($_POST['wb_contact_form_send']) {
+        if (isset($_POST['wb_contact_form_send']) and $_POST['wb_contact_form_send']) {
 
             if (!$_POST['email'] or ($_POST['email'] == "")) {
                 header("Location: ?wb_form_alarm=2");
@@ -161,7 +161,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
                 }
             }
             ?>
-            <script src="<? if (($this->page->link != "index") and ( $this->page->link != "")) { ?>../<? } ?><? if ($this->page->getVariables['sub']) { ?>../<? } ?>../ANM22WebBase/website/plugins/<?= $this->elementPlugin ?>/js/validation.js?v=1"></script>
+            <script src="<? if (($this->page->link != "index") and ( $this->page->link != "")) { ?>../<? } ?><? if (isset($this->page->getVariables['sub']) && $this->page->getVariables['sub']) { ?>../<? } ?>../ANM22WebBase/website/plugins/<?= $this->elementPlugin ?>/js/validation.js?v=1"></script>
             <?
             if ($this->title != "") {
                 echo '<' . $this->getHeadingTag() . ' class="form-title">' . $this->title . '</' . $this->getHeadingTag() . '>';
