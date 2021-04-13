@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 10 Feb 2020 - GMT +1 00:03
+ * Last modified: 13 Apr 2021 - GMT +2 09:44
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -65,7 +65,7 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
 
     function show() {
         if ($this->socialMode == 1) {
-            if ($_SERVER['HTTPS']) {
+            if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && ($_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'))) {
                 $httpProtocol = 'https://';
             } else {
                 $httpProtocol = 'http://';
@@ -77,7 +77,7 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
                         echo $this->cssClass;
                     }
                     echo '" ';
-                    if ($this->page->templateInlineStyles[$this->elementPlugin . "_" . $this->elementClass]) {
+                    if (isset($this->page->templateInlineStyles[$this->elementPlugin . "_" . $this->elementClass]) && $this->page->templateInlineStyles[$this->elementPlugin . "_" . $this->elementClass]) {
                         echo ' style="' . $this->page->templateInlineStyles[$this->elementPlugin . "_" . $this->elementClass] . '"';
                     }
                     echo '>';

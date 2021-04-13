@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 09 Jun 2020 - GMT +2 21:39
+ * Last modified: 13 Apr 2021 - GMT +2 09:47
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -76,8 +76,12 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
             $language = $this->page->language;
 
             // Lettura ID news
-            $newsId = intval($this->page->getVariables['news']);
-            if ((!$newsId) or $newsId == "") {
+            if (isset($this->page->getVariables['news'])) {
+                $newsId = intval($this->page->getVariables['news']);
+            } else {
+                $newsId = null;
+            }
+            if ((!$newsId) || $newsId == "") {
                 $newsId = $this->getNewsIdFromPermalink($this->page->getPageSubLink());
             }
             $newsXML = @simplexml_load_file("../News/" . $newsId . "/news.xml");
@@ -272,7 +276,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                     echo '<div class="news-pages">';
                         for ($p = 1; $p <= $pagesNumber; $p++) {
                             echo '<a href="?';
-                            if ($newsTagFilter) {
+                            if (isset($newsTagFilter) && $newsTagFilter) {
                                 echo 'nt=' . urlencode($newsTagFilter) . '&';
                             }
                             echo 'np=' . $p . '"';
