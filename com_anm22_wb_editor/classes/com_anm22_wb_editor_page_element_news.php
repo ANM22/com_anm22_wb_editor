@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 13 Apr 2021 - GMT +2 09:47
+ * Last modified: 17 May 2021 - GMT +2 16:23
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -13,7 +13,12 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
 
     var $elementClass = "com_anm22_wb_editor_page_element_news";
     var $elementPlugin = "com_anm22_wb_editor";
+    
+    protected $cssClass = '';
+    
     var $title;
+    protected $headingTag = 'h1';
+    
     var $newsShowLink;
     var $newsCategory;
     var $newsMode;
@@ -21,6 +26,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
     var $newsRows;
     var $newsColumns;
     var $newsTitle;
+    protected $newsHeadingTag = 'h2';
     var $newsViewSubtitle = 0;
     var $newsImg;
     var $newsDescription;
@@ -28,6 +34,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
     var $newsViewTags = 0;
     var $newsTagsPageUrl;
     var $newsPageTitleOverwrite;
+    protected $newsPreviewHeadingTag = 'h2';
     var $newsPreviewDate = 0;
     var $newsPreviewDescription = 1;
     var $newsPreviewDescriptionLenght = 300;
@@ -40,7 +47,15 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
 
     function importXMLdoJob($xml) {
         require_once '../ANM22WebBase/website/plugins/com_anm22_wb_editor/classes/WBNews.php';
+        
+        if (isset($xml->cssClass)) {
+            $this->cssClass = $xml->cssClass;
+        }
+        
         $this->title = $xml->title;
+        if (isset($xml->headingTag)) {
+            $this->headingTag = $xml->headingTag;
+        }
         $this->newsShowLink = $xml->newsShowLink;
         $this->newsCategory = trim($xml->newsCategory);
         $this->newsMode = $xml->newsMode;
@@ -48,6 +63,9 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         $this->newsRows = $xml->newsRows;
         $this->newsColumns = $xml->newsColumns;
         $this->newsTitle = intval($xml->newsTitle);
+        if (isset($xml->newsHeadingTag)) {
+            $this->newsHeadingTag = $xml->newsHeadingTag;
+        }
         $this->newsViewSubtitle = intval($xml->newsViewSubtitle);
         $this->newsImg = intval($xml->newsImg);
         $this->newsDescription = intval($xml->newsDescription);
@@ -57,8 +75,11 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         $this->newsViewTags = intval($xml->newsViewTags);
         $this->newsTagsPageUrl = htmlspecialchars_decode($xml->newsTagsPageUrl);
 
+        if (isset($xml->newsPreviewHeadingTag)) {
+            $this->newsPreviewHeadingTag = $xml->newsPreviewHeadingTag;
+        }
         $this->newsPreviewDate = $xml->newsPreviewDate;
-        if (intval($xml->newsPreviewDescriptionLenght) or ( $xml->newsPreviewDescriptionExtraString)) {
+        if (intval($xml->newsPreviewDescriptionLenght) or ($xml->newsPreviewDescriptionExtraString)) {
             $this->newsPreviewDescription = $xml->newsPreviewDescription;
             $this->newsPreviewDescriptionLenght = intval($xml->newsPreviewDescriptionLenght);
             $this->newsPreviewDescriptionExtraString = $xml->newsPreviewDescriptionExtraString;
@@ -68,9 +89,16 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         $this->newsPageTitleOverwrite = intval($xml->newsPageTitleOverwrite);
         $this->disableSeoTags = intval($xml->disableSeoTags);
         $this->rewrite = $xml->rewrite;
+        
+        // Identifico la cartella delle news
+        if (file_exists("../News/")) {
+            $newsFolderName = "News";
+        } else {
+            $newsFolderName = "news";
+        }
 
         /* Aggiornamento informazioni pagina in caso di news singola */
-        if (((isset($_GET['news']) && intval($_GET['news'])) or ( $this->page->getPageSubLink())) and ( $this->newsMode != "previewonly")) {
+        if (((isset($_GET['news']) && intval($_GET['news'])) or ($this->page->getPageSubLink())) and ($this->newsMode != "previewonly")) {
 
             /* Recupero dati news */
             $language = $this->page->language;
@@ -84,7 +112,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
             if ((!$newsId) || $newsId == "") {
                 $newsId = $this->getNewsIdFromPermalink($this->page->getPageSubLink());
             }
-            $newsXML = @simplexml_load_file("../News/" . $newsId . "/news.xml");
+            $newsXML = @simplexml_load_file("../" . $newsFolderName . "/" . $newsId . "/news.xml");
 
             $news = new WBNews();
             $news->loadByXML($newsXML);
@@ -99,8 +127,8 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                 }
 
                 /* Aggiornamento immagine */
-                if (file_exists("../News/" . $newsId . "/img.png")) {
-                    $this->page->image = "http://" . $_SERVER['HTTP_HOST'] . "/News/" . $newsId . "/img.png";
+                if (file_exists("../" . $newsFolderName . "/" . $newsId . "/img.png")) {
+                    $this->page->image = "http://" . $_SERVER['HTTP_HOST'] . "/" . $newsFolderName . "/" . $newsId . "/img.png";
                 }
 
                 /* Aggiornamento descrizione */
@@ -110,8 +138,17 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
     }
 
     function show() {
+        
         require_once '../ANM22WebBase/website/plugins/com_anm22_wb_editor/classes/WBNews.php';
-        $xmlNewsIndex = simplexml_load_file("../News/newsIndex.xml");
+        
+        // Identifico la cartella delle news
+        if (file_exists("../News/")) {
+            $newsFolderName = "News";
+        } else {
+            $newsFolderName = "news";
+        }
+        
+        $xmlNewsIndex = simplexml_load_file("../" . $newsFolderName . "/newsIndex.xml");
         $language = $this->page->language;
         $index = 0;
         if ($this->newsShowLink) {
@@ -154,15 +191,15 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
             $newsOffset = ($newsPage - 1) * $this->newsLimit;
             $newsLimit = $this->newsLimit + $newsOffset;
             
-            echo '<div class="' . $this->elementPlugin . '_' . $this->elementClass . '_mode_preview">';
+            echo '<div class="' . $this->elementPlugin . '_' . $this->elementClass . '_mode_preview ' . $this->cssClass . '">';
                 
-                if (($this->title) and ( $this->title != "")) {
-                    echo '<h1>' . $this->title . '</h1>';
+                if (($this->title) and ($this->title != "")) {
+                    echo '<' . $this->headingTag . '>' . $this->title . '</' . $this->headingTag . '>';
                 }
 
                 foreach ($xmlNewsIndex->NEWS->ITEM as $xmlNewsIndexElement) {
                     $newsId = $xmlNewsIndexElement->FOLDER;
-                    $newsXML = @simplexml_load_file("../News/" . $newsId . "/news.xml");
+                    $newsXML = @simplexml_load_file("../" . $newsFolderName . "/" . $newsId . "/news.xml");
                     $news = new WBNews();
                     $news->loadByXML($newsXML);
 
@@ -180,7 +217,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                         }
                     }
 
-                    if (($news->getLanguageState($language)) and ( ($news->getCategory() == $this->newsCategory) or ( (($this->newsCategory == "") or ( !$this->newsCategory)) and ( trim($news->getCategory()) != "invisible")))) {
+                    if (($news->getLanguageState($language)) and (($news->getCategory() == $this->newsCategory) or ((($this->newsCategory == "") or (!$this->newsCategory)) and (trim($news->getCategory()) != "invisible")))) {
                         $index++;
                         if ($index <= $newsOffset) {
                             continue;
@@ -222,19 +259,19 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                                     echo '<div itemprop="name" property="name">' . $news->getPublisherName() . '</div>';
                                 echo '</div>';
                                 if ($this->newsTitle) {
-                                    echo '<h1 itemprop="headline" property="headline">' . $news->getTitle($language) . '</h1>';
+                                    echo '<' . $this->newsPreviewHeadingTag . ' itemprop="headline" property="headline">' . $news->getTitle($language) . '</' . $this->newsPreviewHeadingTag . '>';
                                 }
                                 if ($this->newsViewSubtitle) {
                                     echo '<h2 itemprop="alternativeHeadline" property="alternativeHeadline">' .$news->getSubtitle($language) . '</h2>';
                                 }
-                                if (($this->newsImg) and ( file_exists("../News/" . $newsId . "/img.png"))) {
-                                    $size = getimagesize("../News/" . $newsId . "/img.png");
-                                    echo '<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject" property="image" vocab="http://schema.org/" typeof="ImageObject" class="news_preview_img" style="background-image:url(' . $this->page->getHomeFolderRelativeHTMLURL() . 'News/' . $newsId . '/img.png);">';
-                                        echo '<meta itemprop="url" property="url" content="' . $homeFolder . 'News/' . $newsId . '/img.png">';
+                                if (($this->newsImg) and ( file_exists("../" . $newsFolderName . "/" . $newsId . "/img.png"))) {
+                                    $size = getimagesize("../" . $newsFolderName . "/" . $newsId . "/img.png");
+                                    echo '<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject" property="image" vocab="http://schema.org/" typeof="ImageObject" class="news_preview_img" style="background-image:url(' . $this->page->getHomeFolderRelativeHTMLURL() . $newsFolderName . '/' . $newsId . '/img.png);">';
+                                        echo '<meta itemprop="url" property="url" content="' . $homeFolder . $newsFolderName . '/' . $newsId . '/img.png">';
                                         echo '<meta itemprop="width" property="width" content="' . $size[0] . '">';
                                         echo '<meta itemprop="height" property="height" content="' . $size[1] . '">';
                                     echo '</div>';
-                                    echo '<img class="ecom_preview_img_seo" src="' . $this->page->getHomeFolderRelativeHTMLURL() . 'News/' . $newsId . '/img.png" style="display:none;" />';
+                                    echo '<img class="ecom_preview_img_seo" src="' . $this->page->getHomeFolderRelativeHTMLURL() . $newsFolderName . '/' . $newsId . '/img.png" style="display:none;" />';
                                 }
 
                                 if ($this->newsPreviewDate == 1) {
@@ -257,8 +294,8 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                                     echo '<div class="news_preview_body" itemprop="articleBody" property="articleBody">' . $news->getText($language) . '</div>';
                                 }
 
-                                if (file_exists("../News/" . $newsId . "/att.pdf")) {
-                                    echo '<div class="news_preview_att" onclick="location.href=\'' . $this->page->getHomeFolderRelativeHTMLURL() . 'News/' . $newsId . '/att.pdf\'">Download PDF</div>';
+                                if (file_exists("../" . $newsFolderName . "/" . $newsId . "/att.pdf")) {
+                                    echo '<div class="news_preview_att" onclick="location.href=\'' . $this->page->getHomeFolderRelativeHTMLURL() . $newsFolderName . '/' . $newsId . '/att.pdf\'">Download PDF</div>';
                                 }
                             echo '</article>';
                         echo '</a>';
@@ -290,13 +327,13 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
             echo '</div>';
         } else {
             // News show
-            $newsXML = @simplexml_load_file("../News/" . $newsId . "/news.xml");
+            $newsXML = @simplexml_load_file("../" . $newsFolderName . "/" . $newsId . "/news.xml");
             $news = new WBNews();
             $news->loadByXML($newsXML);
             if ($news->getGalleryId() > 0) {
                 $this->page->getVariables['gId'] = $news->getGalleryId();
             }
-            echo '<div class="' . $this->elementPlugin . '_' . $this->elementClass .'_mode_view">';
+            echo '<div class="' . $this->elementPlugin . '_' . $this->elementClass .'_mode_view ' . $this->cssClass . '">';
                 echo '<article itemscope itemtype="http://schema.org/NewsArticle" vocab="http://schema.org/" typeof="NewsArticle">';
                     echo '<meta itemscope itemprop="mainEntityOfPage" itemType="https://schema.org/WebPage" property="mainEntityOfPage" vocab="http://schema.org/" typeof="WebPage" itemid="' . $homeFolder . $_SERVER['REQUEST_URI'] . '"/>';
                     echo '<meta itemprop="datePublished" property="datePublished" content="' . date("Y-m-d", intval($newsId)) . '" />';
@@ -321,19 +358,19 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                         echo '</div>';
                         echo '<div itemprop="name" property="name">' . $news->getPublisherName() . '</div>';
                     echo '</div>';
-                    echo '<h1 itemprop="headline" property="headline">' . $news->getTitle($language) . '</h1>';
+                    echo '<' . $this->newsHeadingTag . ' itemprop="headline" property="headline">' . $news->getTitle($language) . '</' . $this->newsHeadingTag . '>';
                     if ($this->newsViewSubtitle) {
                         echo '<h2 itemprop="alternativeHeadline" property="alternativeHeadline">' . $news->getSubtitle($language) . '</h2>';
                     }
-                    if (file_exists("../News/" . $newsId . "/img.png")) {
-                        $size = getimagesize("../News/" . $newsId . "/img.png");
+                    if (file_exists("../" . $newsFolderName . "/" . $newsId . "/img.png")) {
+                        $size = getimagesize("../" . $newsFolderName . "/" . $newsId . "/img.png");
                         
                         echo '<div itemprop="image" itemscope itemtype="https://schema.org/ImageObject" property="image" vocab="http://schema.org/" typeof="ImageObject" class="news_preview_img" style="display:none !important">';
-                            echo '<meta itemprop="url" property="url" content="' . $homeFolder . 'News/' . $newsId . '/img.png">';
+                            echo '<meta itemprop="url" property="url" content="' . $homeFolder . $newsFolderName . '/' . $newsId . '/img.png">';
                             echo '<meta itemprop="width" property="width" content="' . $size[0] . '">';
                             echo '<meta itemprop="height" property="height" content="' . $size[1] . '">';
                         echo '</div>';
-                        echo '<img src="' . $this->page->getHomeFolderRelativeHTMLURL() . 'News/' . $newsId . '/img.png" class="news_view_img" ';
+                        echo '<img src="' . $this->page->getHomeFolderRelativeHTMLURL() . $newsFolderName . '/' . $newsId . '/img.png" class="news_view_img" ';
                             if (($this->newsViewGalleryMode == 2) and ( ($news->getGalleryId() > 0))) {
                                 echo 'style="display: none !important;" ';
                             }
@@ -346,8 +383,8 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                     
                     echo '<div itemprop="articleBody" property="articleBody">' . nl2br($news->getText($language)) . '</div>';
                     
-                    if (file_exists("../News/" . $newsId . "/att.pdf")) {
-                        ?><div class="news_view_att"><a href="<?= $this->page->getHomeFolderRelativeHTMLURL() ?>News/<?= $newsId ?>/att.pdf">Download PDF</a></div><?
+                    if (file_exists("../" . $newsFolderName . "/" . $newsId . "/att.pdf")) {
+                        ?><div class="news_view_att"><a href="<?= $this->page->getHomeFolderRelativeHTMLURL() ?><?=$newsFolderName?>/<?= $newsId ?>/att.pdf">Download PDF</a></div><?
                     }
                     if ($this->newsViewTags) {
                         ?>
