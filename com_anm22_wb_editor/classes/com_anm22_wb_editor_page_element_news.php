@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 17 May 2021 - GMT +2 16:23
+ * Last modified: 18 May 2021 - GMT +2 19:45
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -58,6 +58,13 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         }
         $this->newsShowLink = $xml->newsShowLink;
         $this->newsCategory = trim($xml->newsCategory);
+        if ($this->newsCategory == "[url]") {
+            if ($this->page->getPageLastSubLink()) {
+                $this->newsCategory = $this->page->getPageLastSubLink();
+            } else {
+                $this->newsCategory = "";
+            }
+        }
         $this->newsMode = $xml->newsMode;
         $this->newsLimit = intval($xml->newsLimit);
         $this->newsRows = $xml->newsRows;
@@ -98,7 +105,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         }
 
         /* Aggiornamento informazioni pagina in caso di news singola */
-        if (((isset($_GET['news']) && intval($_GET['news'])) or ($this->page->getPageSubLink())) and ($this->newsMode != "previewonly")) {
+        if (((isset($_GET['news']) && intval($_GET['news'])) or ($this->page->getPageLastSubLink() and $this->getNewsIdFromPermalink($this->page->getPageLastSubLink()))) and ($this->newsMode != "previewonly")) {
 
             /* Recupero dati news */
             $language = $this->page->language;
@@ -110,7 +117,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                 $newsId = null;
             }
             if ((!$newsId) || $newsId == "") {
-                $newsId = $this->getNewsIdFromPermalink($this->page->getPageSubLink());
+                $newsId = $this->getNewsIdFromPermalink($this->page->getPageLastSubLink());
             }
             $newsXML = @simplexml_load_file("../" . $newsFolderName . "/" . $newsId . "/news.xml");
 
@@ -169,7 +176,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
             $newsId = 0;
         }
         if (!$newsId) {
-            $newsId = $this->getNewsIdFromPermalink($this->page->getPageSubLink());
+            $newsId = $this->getNewsIdFromPermalink($this->page->getPageLastSubLink());
         }
         // Lettura filtro tag
         if (isset($this->page->getVariables['nt']) and ( $this->page->getVariables['nt'] != "")) {
@@ -177,7 +184,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         }
 
         // Preview mode
-        if ((!$newsId) or ( $this->newsMode == "previewonly")) {
+        if ((!$newsId) or ($this->newsMode == "previewonly")) {
             $articleBlockWidth = intval(100 / $this->newsColumns);
             
             if (isset($this->page->getVariables['np'])) {
@@ -230,7 +237,18 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                         }
                         echo "<a ";
                             if ($this->rewrite != "off") {
-                                echo 'href="' . $href . $this->getPermalinkWithId($newsId, $news->getTitle($language)) . '/" ';
+                                // Percorso categoria dinamico
+                                $articleHref = $href;
+                                if (strpos($articleHref, '[category]') !== false) {
+                                    $articleHref = str_replace('[category]', $news->getCategory(), $articleHref);
+                                }
+                                if (strpos($articleHref, '[domain]') !== false) {
+                                    $articleHref = str_replace('[domain]', $_SERVER['HTTP_HOST'], $articleHref);
+                                }
+                                if (strpos($articleHref, '[main]') !== false) {
+                                    $articleHref = str_replace('[main]', $this->page->getHomeFolderRelativeHTMLURL(), $articleHref);
+                                }
+                                echo 'href="' . $articleHref . $this->getPermalinkWithId($newsId, $news->getTitle($language)) . '/" ';
                             } else {
                                 echo 'href="' . $href . '?news=' . $newsId . '" ';
                             }
