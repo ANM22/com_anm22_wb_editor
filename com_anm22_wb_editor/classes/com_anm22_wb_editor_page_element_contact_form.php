@@ -1,7 +1,7 @@
 <?php
 /*
  * Author: ANM22
- * Last modified: 13 Dec 2020 - GMT +1 11:42
+ * Last modified: 07 Nov 2021 - GMT +1 18:38
  *
  * ANM22 Andrea Menghi all rights reserved
  *
@@ -15,7 +15,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
     var $elementPlugin = "com_anm22_wb_editor";
     var $email;
     var $title;
-    private $headingTag = 'h1';
+    protected $headingTag = 'h1';
     var $sendPeriod;
     var $privacy_url;
     var $adwordsScript;
@@ -26,6 +26,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
     var $inputPhone;
     var $inputNote;
     var $formMode;
+    protected $fromEmailAddress;
 
     function importXMLdoJob($xml) {
         $this->title = $xml->title;
@@ -42,6 +43,9 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
         $this->formMode = $xml->formMode;
         if (isset($xml->headingTag)) {
             $this->setHeadingTag(htmlspecialchars_decode($xml->headingTag));
+        }
+        if (isset($xml->fromEmailAddress)) {
+            $this->fromEmailAddress = htmlspecialchars_decode($xml->fromEmailAddress);
         }
 
         if (isset($_POST['wb_contact_form_send']) and $_POST['wb_contact_form_send']) {
@@ -63,13 +67,13 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
 
             include_once "../ANM22WebBase/website/plugins/com_anm22_wb_editor/mailFunctions.php";
 
-            $obj = $_SERVER['HTTP_HOST'] . " - Richiesta informazioni da " . $_POST['name'] . " " . $_POST['surname'];
+            $obj = $_SERVER['HTTP_HOST'] . " - Richiesta informazioni da " . $_POST['fname'] . " " . $_POST['lname'];
             $from = $_POST['email'];
             $to = $this->email;
             
             if ($this->formMode == "1") {
 
-                $msg = "Richiesta informazioni da parte di: " . $_POST['name'] . " " . $_POST['surname'] . "\n";
+                $msg = "Richiesta informazioni da parte di: " . $_POST['fname'] . " " . $_POST['lname'] . "\n";
                 $msg .= "Email: " . $_POST['email'] . "\n";
                 $msg .= "Telefono: " . $_POST['phone'] . "\n\n";
                 $msg .= "Data di arrivo: " . $_POST['checkin'] . "\n\n";
@@ -94,7 +98,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
                 
             } else {
                 
-                $msg = "Richiesta informazioni da parte di: " . $_POST['name'] . " " . $_POST['surname'] . "\n";
+                $msg = "Richiesta informazioni da parte di: " . $_POST['fname'] . " " . $_POST['lname'] . "\n";
                 $msg .= "Email: " . $_POST['email'] . "\n";
                 $msg .= "Telefono: " . $_POST['phone'] . "\n\n";
                 $msg .= "Note:\n";
@@ -102,18 +106,53 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
                 
             }
 
-            if (com_anm22_wb_mail_send($from, $to, "", "", $obj, $msg, "plain")) {
+            if ($this->fromEmailAddress) {
+                $fromEmailAddress = $this->fromEmailAddress;
+            } else {
+                $fromEmailAddress = $from;
+            }
+            if (com_anm22_wb_mail_send($fromEmailAddress, $to, "", "", $obj, $msg, "plain", $from)) {
                 
                 include "../ANM22WebBase/config/license.php";
                 
                 // BeTasker Contacts integration
                 $data = array();
-                $data['firstName'] = $_POST['name'];
-                $data['lastName'] = $_POST['surname'];
+                $data['firstName'] = $_POST['fname'];
+                $data['lastName'] = $_POST['lname'];
                 $data['email'] = $from;
                 $data['phoneNumber'] = $_POST['phone'];
                 $data['obj'] = $obj;
                 $data['msg'] = $msg;
+                $data['tracking'] = array();
+                
+                // Tracking code
+                $trackingCode = "\n\nPagina: " . $this->page->getPageLink() . "";
+                $data['tracking']['page'] = $this->page->getPageLink();
+                if (isset($_COOKIE['wb_utm_campaign'])) {
+                    $trackingCode .= "\nutm_campaign: " . $_COOKIE['wb_utm_campaign'];
+                    $data['tracking']['utm_campaign'] = $_COOKIE['wb_utm_campaign'];
+                }
+                if (isset($_COOKIE['wb_utm_medium'])) {
+                    $trackingCode .= "\nutm_medium: " . $_COOKIE['wb_utm_medium'];
+                    $data['tracking']['utm_medium'] = $_COOKIE['wb_utm_medium'];
+                }
+                if (isset($_COOKIE['wb_utm_source'])) {
+                    $trackingCode .= "\nutm_source: " . $_COOKIE['wb_utm_source'];
+                    $data['tracking']['utm_source'] = $_COOKIE['wb_utm_source'];
+                }
+                if (isset($_COOKIE['wb_utm_content'])) {
+                    $trackingCode .= "\nutm_content: " . $_COOKIE['wb_utm_content'];
+                    $data['tracking']['utm_content'] = $_COOKIE['wb_utm_content'];
+                }
+                if (isset($_COOKIE['wb_gclid'])) {
+                    $trackingCode .= "\ngclid: " . $_COOKIE['wb_gclid'];
+                    $data['tracking']['gclid'] = $_COOKIE['wb_gclid'];
+                }
+                if (isset($_COOKIE['wb_cmp'])) {
+                    $trackingCode .= "\ncmp: " . $_COOKIE['wb_cmp'];
+                    $data['tracking']['cmp'] = $_COOKIE['wb_cmp'];
+                }
+                $data['msg'] .= $trackingCode;
 
                 $data_string = json_encode($data);
 
@@ -161,7 +200,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
                 }
             }
             ?>
-            <script src="<? if (($this->page->link != "index") and ( $this->page->link != "")) { ?>../<? } ?><? if (isset($this->page->getVariables['sub']) && $this->page->getVariables['sub']) { ?>../<? } ?>../ANM22WebBase/website/plugins/<?= $this->elementPlugin ?>/js/validation.js?v=1"></script>
+            <script src="<?= $this->page->getHomeFolderRelativeHTMLURL() ?>ANM22WebBase/website/plugins/<?= $this->elementPlugin ?>/js/validation.js?v=1"></script>
             <?
             if ($this->title != "") {
                 echo '<' . $this->getHeadingTag() . ' class="form-title">' . $this->title . '</' . $this->getHeadingTag() . '>';
@@ -170,15 +209,15 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
             <form id="com_anm22_wb_plugin_contact_form" action="" method="post">
                 <div class="form_item_container">
                     <div class="form_item_description"><? if ($this->page->getPageLanguage()) { ?>Nome<? } else { ?>Name<? } ?>*</div>
-                    <input type="text" name="name"/>
+                    <input id="form-name" type="text" name="fname" autocomplete="given-name" />
                 </div>
                 <div class="form_item_container">
                     <div class="form_item_description"><? if ($this->page->getPageLanguage()) { ?>Cognome<? } else { ?>Surname<? } ?>*</div>
-                    <input type="text" name="surname"/>
+                    <input id="form-surname" type="text" name="lname" autocomplete="family-name" />
                 </div>
                 <div class="form_item_container">
                     <div class="form_item_description"><? if ($this->page->getPageLanguage()) { ?>Email<? } else { ?>Email<? } ?>*</div>
-                    <input type="email" name="email"/>
+                    <input id="form-email" type="email" name="email" autocomplete="email" />
                 </div>
                 <?
                 if ($this->formMode == "1") {
@@ -246,11 +285,11 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
                 ?>
                 <div class="form_item_container">
                     <div class="form_item_description"><? if ($this->page->getPageLanguage()) { ?>Telefono<? } else { ?>Phone<? } ?></div>
-                    <input type="text" name="phone"/>
+                    <input id="form-phone" type="tel" name="phone" autocomplete="tel" />
                 </div>
                 <div class="form_item_container_notes">
                     <div class="form_item_description"><? if ($this->page->getPageLanguage()) { ?>Note<? } else { ?>Notes<? } ?></div>
-                    <textarea name="notes"></textarea>
+                    <textarea id="form-notes" name="notes"></textarea>
                 </div>
                 <div class="form_item_container_checkbox">
                     <div class="form_item_description">
