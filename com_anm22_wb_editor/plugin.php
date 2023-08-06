@@ -1,10 +1,9 @@
 <?php
-/*
- * Author: ANM22
- * Last modified: 27 Mar 2020 - GMT +1 17:27
- *
- * ANM22 Andrea Menghi all rights reserved
- *
+/**
+ * Plugin main file
+ * 
+ * @author ANM22
+ * @copyright 2023 Paname srl
  */
 
 /* HTML */
