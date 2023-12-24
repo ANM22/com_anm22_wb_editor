@@ -186,9 +186,9 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
                 echo 'Organization';
             }
             echo '">';
-                if (($this->title) and ( $this->title != "")) {
+                if (($this->title) && ($this->title != "")) {
                     echo '<' . $this->getHeadingTag();
-                    if ($this->page->templateInlineStyles[$this->elementPlugin . "_" . $this->elementClass . "-h1"]) {
+                    if (isset($this->page->templateInlineStyles[$this->elementPlugin . "_" . $this->elementClass . "-h1"]) && $this->page->templateInlineStyles[$this->elementPlugin . "_" . $this->elementClass . "-h1"]) {
                         echo ' style="' . $this->page->templateInlineStyles[$this->elementPlugin . "_" . $this->elementClass . "-h1"] . '"';
                     }
                     echo '>' . $this->title . '</' . $this->getHeadingTag() . '>';
