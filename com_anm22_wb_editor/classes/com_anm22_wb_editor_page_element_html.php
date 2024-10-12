@@ -1,26 +1,50 @@
 <?php
-/*
- * Author: ANM22
- * Last modified: 16 Jan 2017 - GMT +1 23:51
+
+/**
+ * HTML plugin
  *
- * ANM22 Andrea Menghi all rights reserved
- *
+ * @copyright 2024 Paname srl
  */
-
-/* HTML */
-
-class com_anm22_wb_editor_page_element_html extends com_anm22_wb_editor_page_element {
+class com_anm22_wb_editor_page_element_html extends com_anm22_wb_editor_page_element
+{
 
     var $text;
     var $elementClass = "com_anm22_wb_editor_page_element_html";
     var $elementPlugin = "com_anm22_wb_editor";
 
-    function importXMLdoJob($xml) {
+    /**
+     * @deprecated since editor 3.0
+     * 
+     * Method to init the element.
+     * 
+     * @param SimpleXMLElement $xml Element data
+     * @return void
+     */
+    public function importXMLdoJob($xml)
+    {
         $this->text = htmlspecialchars_decode($xml->text);
     }
 
-    function show() {
-        echo $this->text;
+    /**
+     * Method to init the element.
+     * 
+     * @param mixed[] $data Element data
+     * @return void
+     */
+    public function initData($data)
+    {
+        if (isset($data['text']) && $data['text']) {
+            $this->text = htmlspecialchars_decode($data['text']);
+        }
     }
 
+    /**
+     * Render the page element
+     * 
+     * @return void
+     */
+    function show()
+    {
+        echo $this->text;
+    }
 }

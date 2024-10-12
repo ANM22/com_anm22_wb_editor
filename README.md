@@ -1,5 +1,5 @@
 # com_anm22_wb_editor - WebBase plugin
-![version](https://img.shields.io/badge/version-3.22-blue)
+![version](https://img.shields.io/badge/version-3.23-blue)
 
 com_anm22_wb_editor is the main plugins collection of ANM22 WebBase CMS.
 
@@ -21,8 +21,8 @@ com_anm22_wb_editor is the main plugins collection of ANM22 WebBase CMS.
 *	Copy plugin folder inside WebBase plugins path. Check the WebBase developers guide to find out more.
 
 ## System Requirements
-*	WebBase engine v6, v7
-*	WebBase editor v2.10
+*	WebBase engine v10
+*	WebBase editor v3.0
 
 Download WebBase: [WebBase on GitHub](https://github.com/ANM22/WebBase)
 

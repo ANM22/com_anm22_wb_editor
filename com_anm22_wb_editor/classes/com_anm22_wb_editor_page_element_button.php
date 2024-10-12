@@ -15,7 +15,15 @@ class com_anm22_wb_editor_page_element_button extends com_anm22_wb_editor_page_e
     public $elementClass = "com_anm22_wb_editor_page_element_html";
     public $elementPlugin = "com_anm22_wb_editor";
 
-    function importXMLdoJob($xml)
+    /**
+     * @deprecated since editor 3.0
+     * 
+     * Method to init the element.
+     * 
+     * @param SimpleXMLElement $xml Element data
+     * @return void
+     */
+    public function importXMLdoJob($xml)
     {
         $this->label = htmlspecialchars_decode($xml->label);
         $this->cssClass = htmlspecialchars_decode($xml->cssClass);
@@ -24,7 +32,27 @@ class com_anm22_wb_editor_page_element_button extends com_anm22_wb_editor_page_e
         $this->linkTarget = htmlspecialchars_decode($xml->linkTarget);
     }
 
-    function show()
+    /**
+     * Method to init the element.
+     * 
+     * @param mixed[] $data Element data
+     * @return void
+     */
+    public function initData($data)
+    {
+        $this->label = htmlspecialchars_decode($data['label']);
+        $this->cssClass = htmlspecialchars_decode($data['cssClass']);
+        $this->actionMode = htmlspecialchars_decode($data['actionMode']);
+        $this->click = htmlspecialchars_decode($data['click']);
+        $this->linkTarget = htmlspecialchars_decode($data['linkTarget']);
+    }
+
+    /**
+     * Render the page element
+     * 
+     * @return void
+     */
+    public function show()
     {
         switch ($this->actionMode) {
             case 'a':

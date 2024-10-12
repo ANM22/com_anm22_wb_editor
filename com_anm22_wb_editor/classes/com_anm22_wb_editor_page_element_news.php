@@ -1,15 +1,11 @@
 <?php
-/*
- * Author: ANM22
- * Last modified: 18 May 2021 - GMT +2 19:45
+/**
+ * News plugin
  *
- * ANM22 Andrea Menghi all rights reserved
- *
+ * @copyright 2024 Paname srl
  */
-
-/* NEWS */
-
-class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_element {
+class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_element
+{
 
     var $elementClass = "com_anm22_wb_editor_page_element_news";
     var $elementPlugin = "com_anm22_wb_editor";
@@ -24,7 +20,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
     var $newsMode;
     var $newsLimit;
     var $newsRows;
-    var $newsColumns;
+    var $newsColumns = 0;
     var $newsTitle;
     protected $newsHeadingTag = 'h2';
     var $newsViewSubtitle = 0;
@@ -45,7 +41,16 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
     var $disableSeoTags = 0;
     var $rewrite;
 
-    function importXMLdoJob($xml) {
+    /**
+     * @deprecated since editor 3.0
+     * 
+     * Method to init the element.
+     * 
+     * @param SimpleXMLElement $xml Element data
+     * @return void
+     */
+    public function importXMLdoJob($xml)
+    {
         require_once '../ANM22WebBase/website/plugins/com_anm22_wb_editor/classes/WBNews.php';
         
         if (isset($xml->cssClass)) {
@@ -144,7 +149,125 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         }
     }
 
-    function show() {
+    /**
+     * Method to init the element.
+     * 
+     * @param mixed[] $data Element data
+     * @return void
+     */
+    public function initData($data)
+    {
+        require_once '../ANM22WebBase/website/plugins/com_anm22_wb_editor/classes/WBNews.php';
+        
+        if (isset($xml->cssClass)) {
+            $this->cssClass = $data['cssClass'];
+        }
+        
+        $this->title = $data['title'] ?? null;
+        if (isset($data['headingTag'])) {
+            $this->headingTag = $data['headingTag'];
+        }
+        $this->newsShowLink = $data['newsShowLink'] ?? null;
+        $this->newsCategory = (isset($data['newsCategory']) && $data['newsCategory']) ? trim($data['newsCategory']) : null;
+        if ($this->newsCategory == "[url]") {
+            if ($this->page->getPageLastSubLink()) {
+                $this->newsCategory = $this->page->getPageLastSubLink();
+            } else {
+                $this->newsCategory = "";
+            }
+        }
+        $this->newsMode = $data['newsMode'] ?? null;
+        $this->newsLimit = intval($data['newsLimit'] ?? 0);
+        $this->newsRows = intval($data['newsRows'] ?? 0);
+        $this->newsColumns = intval($data['newsColumns'] ?? 0);
+        $this->newsTitle = intval($data['newsTitle'] ?? 0);
+        if (isset($xml->newsHeadingTag)) {
+            $this->newsHeadingTag = $data['newsHeadingTag'];
+        }
+        $this->newsViewSubtitle = intval($data['newsViewSubtitle'] ?? 0);
+        $this->newsImg = intval($data['newsImg'] ?? 0);
+        $this->newsDescription = intval($data['newsDescription'] ?? 0);
+        $this->newsText = intval($data['newsText'] ?? 0);
+        $this->newsViewDate = $data['newsViewDate'] ?? null;
+        $this->newsViewGalleryMode = intval($data['newsViewGalleryMode'] ?? 0);
+        $this->newsViewTags = intval($data['newsViewTags'] ?? 0);
+        if (isset($data['newsTagsPageUrl'])) {
+            if (is_string($data['newsTagsPageUrl'])) {
+                $this->newsTagsPageUrl = htmlspecialchars_decode($data['newsTagsPageUrl']);
+            } else {
+                $this->newsTagsPageUrl = null;
+            }
+        }
+
+        if (isset($data['newsPreviewHeadingTag'])) {
+            $this->newsPreviewHeadingTag = $data['newsPreviewHeadingTag'];
+        }
+        $this->newsPreviewDate = $data['newsPreviewDate'] ?? null;
+        if (intval($data['newsPreviewDescriptionLenght'] ?? 0) || ($data['newsPreviewDescriptionExtraString'] ?? null)) {
+            $this->newsPreviewDescription = $data['newsPreviewDescription'];
+            $this->newsPreviewDescriptionLenght = intval($data['newsPreviewDescriptionLenght']);
+            $this->newsPreviewDescriptionExtraString = $data['newsPreviewDescriptionExtraString'];
+        }
+        $this->newsPreviewPagesList = intval($data['newsPreviewPagesList'] ?? 0); 
+
+        $this->newsPageTitleOverwrite = intval($data['newsPageTitleOverwrite'] ?? 0);
+        $this->disableSeoTags = intval($data['disableSeoTags'] ?? 0);
+        $this->rewrite = $data['rewrite'] ?? null;
+        
+        // Identifico la cartella delle news
+        if (file_exists("../News/")) {
+            $newsFolderName = "News";
+        } else {
+            $newsFolderName = "news";
+        }
+
+        /* Aggiornamento informazioni pagina in caso di news singola */
+        if (((isset($_GET['news']) && intval($_GET['news'])) or ($this->page->getPageLastSubLink() and $this->getNewsIdFromPermalink($this->page->getPageLastSubLink()))) and ($this->newsMode != "previewonly")) {
+
+            /* Recupero dati news */
+            $language = $this->page->language;
+
+            // Lettura ID news
+            if (isset($this->page->getVariables['news'])) {
+                $newsId = intval($this->page->getVariables['news']);
+            } else {
+                $newsId = null;
+            }
+            if ((!$newsId) || $newsId == "") {
+                $newsId = $this->getNewsIdFromPermalink($this->page->getPageLastSubLink());
+            }
+            $newsXML = @simplexml_load_file("../" . $newsFolderName . "/" . $newsId . "/news.xml");
+
+            $news = new WBNews();
+            $news->loadByXML($newsXML);
+            if ($news->getGalleryId() > 0) {
+                $this->page->getVariables['gId'] = $news->getGalleryId();
+            }
+
+            if ((!$this->disableSeoTags) or ( $this->disableSeoTags = "")) {
+                /* Aggiornamento title */
+                if (($news->getTitle($language)) and ( $news->getTitle($language) != "")) {
+                    $this->page->title .= " - " . $newsXML->TITLE->$language;
+                }
+
+                /* Aggiornamento immagine */
+                if (file_exists("../" . $newsFolderName . "/" . $newsId . "/img.png")) {
+                    $this->page->image = "http://" . $_SERVER['HTTP_HOST'] . "/" . $newsFolderName . "/" . $newsId . "/img.png";
+                }
+
+                /* Aggiornamento descrizione */
+                $this->page->description = str_replace('"', "", $news->getTitle($language));
+            }
+        }
+    }
+
+    /**
+     * Method to render the page element
+     * 
+     * @return void
+     */
+    public function show()
+    {
         
         require_once '../ANM22WebBase/website/plugins/com_anm22_wb_editor/classes/WBNews.php';
         
@@ -179,7 +302,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
             $newsId = $this->getNewsIdFromPermalink($this->page->getPageLastSubLink());
         }
         // Lettura filtro tag
-        if (isset($this->page->getVariables['nt']) and ( $this->page->getVariables['nt'] != "")) {
+        if (isset($this->page->getVariables['nt']) && ($this->page->getVariables['nt'] != "")) {
             $newsTagFilter = urldecode($this->page->getVariables['nt']);
         }
 
@@ -224,7 +347,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                         }
                     }
 
-                    if (($news->getLanguageState($language)) and (($news->getCategory() == $this->newsCategory) or ((($this->newsCategory == "") or (!$this->newsCategory)) and (trim($news->getCategory()) != "invisible")))) {
+                    if (($news->getLanguageState($language)) && (($news->getCategory() == $this->newsCategory) || ((($this->newsCategory == "") || (!$this->newsCategory)) && (trim($news->getCategory()) != "invisible")))) {
                         $index++;
                         if ($index <= $newsOffset) {
                             continue;
@@ -321,7 +444,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                         if (($index % $this->newsColumns) == 0) {
                             echo '<div style="clear:left;"></div>';
                         }
-                        if (($index >= $newsLimit) and (!$this->newsPreviewPagesList)) {
+                        if (($index >= $newsLimit) && (!$this->newsPreviewPagesList)) {
                             break;
                         }
                     }

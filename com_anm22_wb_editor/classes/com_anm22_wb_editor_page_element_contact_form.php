@@ -1,15 +1,11 @@
 <?php
-/*
- * Author: ANM22
- * Last modified: 07 Nov 2021 - GMT +1 18:38
+/**
+ * Contact form plugin
  *
- * ANM22 Andrea Menghi all rights reserved
- *
+ * @copyright 2024 Paname srl
  */
-
-/* FORM CONTATTI */
-
-class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_page_element {
+class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_page_element
+{
 
     var $elementClass = "com_anm22_wb_editor_page_element_contact_form";
     var $elementPlugin = "com_anm22_wb_editor";
@@ -28,7 +24,16 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
     var $formMode;
     protected $fromEmailAddress;
 
-    function importXMLdoJob($xml) {
+    /**
+     * @deprecated since editor 3.0
+     * 
+     * Method to init the element.
+     * 
+     * @param SimpleXMLElement $xml Element data
+     * @return void
+     */
+    public function importXMLdoJob($xml)
+    {
         $this->title = $xml->title;
         $this->sendPeriod = $xml->sendPeriod;
         $this->email = $xml->email;
@@ -48,9 +53,48 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
             $this->fromEmailAddress = htmlspecialchars_decode($xml->fromEmailAddress);
         }
 
-        if (isset($_POST['wb_contact_form_send']) and $_POST['wb_contact_form_send']) {
+        $this->sendForm();
+    }
 
-            if (!$_POST['email'] or ($_POST['email'] == "")) {
+    /**
+     * Method to init the element.
+     * 
+     * @param mixed[] $data Element data
+     * @return void
+     */
+    public function initData($data)
+    {
+        $this->title = $data['title'];
+        $this->sendPeriod = $data['sendPeriod'];
+        $this->email = $data['email'];
+        $this->privacy_url = htmlspecialchars_decode($data['privacy_url']);
+        $this->adwordsScript = htmlspecialchars_decode($data['adwordsScript']);
+        $this->cssClass = $data['cssClass'];
+        $this->inputName = $data['inputName'];
+        $this->inputSurname = $data['inputSurname'];
+        $this->inputEmail = $data['inputEmail'];
+        $this->inputPhone = $data['inputPhone'];
+        $this->inputNote = $data['inputNote'];
+        $this->formMode = $data['formMode'];
+        if (isset($data['headingTag'])) {
+            $this->setHeadingTag(htmlspecialchars_decode($data['headingTag']));
+        }
+        if (isset($data['fromEmailAddress'])) {
+            $this->fromEmailAddress = htmlspecialchars_decode($data['fromEmailAddress']);
+        }
+
+        $this->sendForm();
+    }
+
+    /**
+     * Method to send the contant form with POST request
+     * 
+     * @return void
+     */
+    protected function sendForm()
+    {
+        if (isset($_POST['wb_contact_form_send']) && $_POST['wb_contact_form_send']) {
+            if (!$_POST['email'] || ($_POST['email'] == "")) {
                 header("Location: ?wb_form_alarm=2");
                 exit;
             }
@@ -175,7 +219,13 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
         }
     }
 
-    function show() {
+    /**
+     * Render the page element
+     * 
+     * @return void
+     */
+    public function show()
+    {
         ?>
         <div class="<?= $this->elementPlugin ?>_<?= $this->elementClass ?><? if (($this->cssClass)and ( $this->cssClass != "")) { ?> <?= $this->cssClass ?><? } ?>">
             <?
@@ -319,10 +369,24 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
         <?
     }
     
-    public function getHeadingTag() {
+    /**
+     * Get the heading tag
+     * 
+     * @return string
+     */
+    public function getHeadingTag()
+    {
         return $this->headingTag;
     }
-    public function setHeadingTag($headingTag) {
+
+    /**
+     * Set the heading tag
+     * 
+     * @param string $headingTag Heading tag
+     * @return self
+     */
+    public function setHeadingTag($headingTag)
+    {
         $this->headingTag = $headingTag;
         return $this;
     }
@@ -333,7 +397,8 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
      * @param string $email Customer email address
      * @return boolean
      */
-    protected function spamFilterCheck($email) {
+    protected function spamFilterCheck($email)
+    {
         if ($email == $this->email) {
             return false;
         }

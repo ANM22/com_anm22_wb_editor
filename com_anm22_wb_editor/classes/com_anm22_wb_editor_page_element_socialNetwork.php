@@ -1,10 +1,12 @@
 <?php
+
 /**
  * Plugin SOCIAL NETWORK
  * 
- * @copyright 2023 Paname srl
+ * @copyright 2024 Paname srl
  */
-class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor_page_element {
+class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor_page_element
+{
 
     const MODE_SOCIAL_SHARE = 1;
     const MODE_SOCIAL_LINK = 0;
@@ -35,14 +37,15 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
     protected $socialMode;
 
     /**
-     * @deprecated since version 3.20
+     * @deprecated since editor 3.0
      * 
      * Import plugin data from XML serialization
      * 
      * @param mixed $xml Serialized data
      * @return void
      */
-    public function importXMLdoJob($xml) {
+    public function importXMLdoJob($xml)
+    {
         $data = [];
         $data['socialMode'] = intval($xml->socialMode);
         $data['title'] = $xml->title;
@@ -75,12 +78,13 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
     }
 
     /**
-     * Import plugin data
+     * Method to init the element.
      * 
-     * @param mixed[] $data Serialized data
+     * @param mixed[] $data Element data
      * @return void
      */
-    public function init($data) {
+    public function initData($data)
+    {
         $this->socialMode = intval($data['socialMode']);
         $this->title = $data['title'];
         $this->facebook = $data['facebook'];
@@ -103,10 +107,23 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
         if (isset($data['tiktok'])) {
             $this->tiktok = $data['tiktok'];
         }
-        $this->cssClass = $data['cssClass'];
+        if (isset($data['cssClass']) && $data['cssClass']) {
+            $this->cssClass = $data['cssClass'];
+        }
         if (isset($data['headingTag'])) {
             $this->setHeadingTag(htmlspecialchars_decode($data['headingTag']));
         }
+    }
+
+    /**
+     * Method to init the element.
+     * 
+     * @param mixed[] $data Element data
+     * @return void
+     */
+    public function init($data)
+    {
+        $this->initData($data);
     }
 
     /**
@@ -114,7 +131,8 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
      * 
      * @return void
      */
-    function show() {
+    public function show()
+    {
         if ($this->socialMode == self::MODE_SOCIAL_SHARE) {
             if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && ($_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'))) {
                 $httpProtocol = 'https://';
@@ -124,7 +142,7 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
             $page = urlencode($httpProtocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
             
             echo '<div class="' . $this->elementPlugin . '_' . $this->elementClass . ' socialShare ';
-                    if ($this->cssClass != "") {
+                    if ($this->cssClass) {
                         echo $this->cssClass;
                     }
                     echo '" ';
@@ -166,7 +184,7 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
             echo '</div>';
         } else {
             echo '<div class="' . $this->elementPlugin . '_' . $this->elementClass . ' ';
-            if ($this->cssClass != "") {
+            if ($this->cssClass) {
                 echo $this->cssClass;
             }
             echo '" ';
@@ -219,7 +237,8 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
      * 
      * @return string
      */
-    public function getHeadingTag() {
+    public function getHeadingTag()
+    {
         return $this->headingTag;
     }
 
@@ -229,7 +248,8 @@ class com_anm22_wb_editor_page_element_socialNetwork extends com_anm22_wb_editor
      * @param string $headingTag Heading tag
      * @return self
      */
-    public function setHeadingTag($headingTag) {
+    public function setHeadingTag($headingTag)
+    {
         $this->headingTag = $headingTag;
         return $this;
     }

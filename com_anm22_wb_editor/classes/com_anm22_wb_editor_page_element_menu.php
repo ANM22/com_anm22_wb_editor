@@ -1,15 +1,12 @@
 <?php
-/*
- * Author: ANM22
- * Last modified: 17 Jan 2017 - GMT +1 00:43
+
+/**
+ * Menu plugin
  *
- * ANM22 Andrea Menghi all rights reserved
- *
+ * @copyright 2024 Paname srl
  */
-
-/* MENU */
-
-class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_element {
+class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_element
+{
 
     var $elementClass = "com_anm22_wb_editor_page_element_menu";
     var $elementPlugin = "com_anm22_wb_editor";
@@ -22,7 +19,16 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
     var $title;
     var $cssClass;
 
-    function importXMLdoJob($xml) {
+    /**
+     * @deprecated since editor 3.0
+     * 
+     * Init element
+     * 
+     * @param SimpleXMLElement $xml Element data
+     * @return void
+     */
+    function importXMLdoJob($xml)
+    {
         $this->layerLevel = intval($xml->layerLevel);
         $this->layerParent = intval($xml->layerParent);
         $this->layerParentVisible = intval($xml->layerParentVisible);
@@ -33,23 +39,58 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
         $this->cssClass = htmlspecialchars_decode($xml->cssClass);
     }
 
-    function show() {
+    /**
+     * Init element
+     * 
+     * @param mixed[] $data Element data
+     * @return void
+     */
+    function initData($data)
+    {
+        $this->layerLevel = intval($data['layerLevel']);
+        $this->layerParent = intval($data['layerParent']);
+        $this->layerParentVisible = intval($data['layerParentVisible']);
+        $this->menuMode = $data['menuMode'];
+        $this->rewrite = $data['rewrite'];
+        $this->dropdown = $data['dropdown'];
+        $this->title = $data['title'];
+        if (isset($data['cssClass'])) {
+            if (is_string($data['cssClass'])) {
+                $this->cssClass = htmlspecialchars_decode($data['cssClass']);
+            } else {
+                $this->cssClass = $data['cssClass'];
+            }
+        }
+    }
+
+    /**
+     * Method to render the page element
+     * 
+     * @return void
+     */
+    function show()
+    {
         if ($this->menuMode == "") {
             $this->menuMode = "dm";
         }
         $languageSelected = $this->page->language . "";
         $pageIndexObject = new com_anm22_wb_editor_pages_index();
-        if ($xmlPagesIndex = @simplexml_load_file("../ANM22WebBase/website/pages.xml")) {
-            $pageIndexObject->importXML($xmlPagesIndex);
+        if (file_exists("../ANM22WebBase/website/pages.json")) {
+            $jsonPagesIndex = json_decode(file_get_contents("../ANM22WebBase/website/pages.json"), true);
+            $pageIndexObject->initData($jsonPagesIndex);
+        } else if (file_exists("../ANM22WebBase/website/pages.xml")) {
+            $xmlPagesIndex = simplexml_load_file("../ANM22WebBase/website/pages.xml");
+            $jsonPagesIndex = WebBaseXmlLogics::xmlToAssoc($xmlPagesIndex);
+            $pageIndexObject->initData($jsonPagesIndex);
         }
-        $websitePages = array();
+        $websitePages = [];
         if ($this->layerLevel == 0) {
             $layerParentObject = $pageIndexObject;  /* Se non è figlio di nessuno, il suo parent è il livello di indice */
         } else {
             $layerParentObject = $pageIndexObject->layers[$this->layerParent . ""]; /* Se no, prende il livello del padre */
             if ($this->layerParentVisible) {
                 $scanSelLay = $layerParentObject;
-                $datasellayscan = array();
+                $datasellayscan = [];
                 $datasellayscan['id'] = $scanSelLay->id;
                 if ($scanSelLay->menuName[$languageSelected]) {
                     $datasellayscan['name'] = $scanSelLay->menuName[$languageSelected];
@@ -63,7 +104,7 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
         if ($layerParentObject->pages) {
             foreach ($layerParentObject->pages as $pageId) {
                 $scanSelLay = $pageIndexObject->layers[$pageId . ""];
-                $datasellayscan = array();
+                $datasellayscan = [];
                 $datasellayscan['id'] = $scanSelLay->id;
                 if (@$scanSelLay->menuName[$languageSelected]) {
                     $datasellayscan['name'] = $scanSelLay->menuName[$languageSelected]; /* Nome della pagina rispetto alla lingua */
@@ -71,12 +112,12 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
                     $datasellayscan['name'] = $scanSelLay->name; /* Altrimenti nome di default (dovrebbe essere EN o IT) */
                 }
                 $datasellayscan['link'] = $scanSelLay->link;
-                $datasellayscan['childPages'] = array();
+                $datasellayscan['childPages'] = [];
                 /* versione a tendina */
                 if ($scanSelLay->pages) {
                     foreach ($scanSelLay->pages as $childPageId) {
                         $scanChildSelLay = $pageIndexObject->layers[$childPageId . ""];
-                        $datachildsellayscan = array();
+                        $datachildsellayscan = [];
                         $datachildsellayscan['id'] = $scanChildSelLay->id;
                         if ($scanChildSelLay->menuName[$languageSelected]) {
                             $datachildsellayscan['name'] = $scanChildSelLay->menuName[$languageSelected]; /* Nome della pagina rispetto alla lingua */
@@ -99,7 +140,7 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
             if ($this->menuMode == "m") {
                 echo '_none';
             }
-            echo ' ' . $this->cssClass . '">';
+            echo ' ' . ($this->cssClass ? $this->cssClass : '') . '">';
             if ($this->title && $this->title != "") {
                 echo '<h1>' . $this->title . '</h1>';
             }
@@ -108,7 +149,7 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
                     foreach ($websitePages as $xmlPagesIndexElement) {
                         if ($this->rewrite != "off") {
                             echo '<a href="' . $this->page->getLanguageHomeFolderRelativeHTMLURL();
-                                if (($xmlPagesIndexElement['link'] != "index") and ( $xmlPagesIndexElement['link'] != "")) {
+                                if (($xmlPagesIndexElement['link'] != "index") && ($xmlPagesIndexElement['link'] != "")) {
                                     echo $xmlPagesIndexElement['link'] . '/';     
                                 }
                                 echo '">';
@@ -151,7 +192,7 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
                             echo '</a>';
                         } else {
                             echo '<a href="' . $this->page->getLanguageHomeFolderRelativeHTMLURL();
-                                if (($xmlPagesIndexElement['link'] != "index") and ( $xmlPagesIndexElement['link'] != "")) {
+                                if (($xmlPagesIndexElement['link'] != "index") && ($xmlPagesIndexElement['link'] != "")) {
                                     echo '?page=' . $xmlPagesIndexElement['link'];
                                 }
                                 echo '">';
@@ -204,7 +245,7 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
             if ($this->menuMode == "d") {
                 echo '_none';
             }
-            echo ' ' . $this->cssClass . '">';
+            echo ' ' . ($this->cssClass ? $this->cssClass : '') . '">';
             echo '<a href="javascript:com_anm22_wb_editor_com_anm22_wb_editor_page_element_menu_openMobileMenu(\'' . $this->id . '\')"><div class="' . $this->elementPlugin . '_' . $this->elementClass . '_menu_mobile_button" style="min-height:20px; min-width:20px;"></div></a>';
             echo '<ul id="' . $this->elementPlugin . '_' . $this->elementClass . '_' . $this->id . '_menu_mobile_list">';
                 if ($websitePages) {
@@ -267,7 +308,7 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
                             echo '</a>';
                         } else {
                             echo '<a href="' . $this->page->getLanguageHomeFolderRelativeHTMLURL();
-                                if (($xmlPagesIndexElement['link'] != "index") and ( $xmlPagesIndexElement['link'] != "")) {
+                                if (($xmlPagesIndexElement['link'] != "index") && ($xmlPagesIndexElement['link'] != "")) {
                                     echo '?page=' . $xmlPagesIndexElement['link'];
                                 }
                                 echo '">';
@@ -304,7 +345,7 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
                                         echo '<ul id="mobile-ul-with-hover-' . $xmlPagesIndexElement['link'] . '" style="display: none;">';
                                             foreach ($xmlPagesIndexElement['childPages'] as $childPageToEcho) {
                                                 echo '<a href="' . $this->page->getLanguageHomeFolderRelativeHTMLURL();
-                                                    if (($childPageToEcho['link'] != "index") and ( $childPageToEcho['link'] != "")) {
+                                                    if (($childPageToEcho['link'] != "index") && ($childPageToEcho['link'] != "")) {
                                                         echo $childPageToEcho['link'] . '/';
                                                     }
                                                     echo '">';
