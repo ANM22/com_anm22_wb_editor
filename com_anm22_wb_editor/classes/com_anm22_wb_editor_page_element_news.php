@@ -140,7 +140,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
 
                 /* Aggiornamento immagine */
                 if (file_exists("../" . $newsFolderName . "/" . $newsId . "/img.png")) {
-                    $this->page->image = "http://" . $_SERVER['HTTP_HOST'] . "/" . $newsFolderName . "/" . $newsId . "/img.png";
+                    $this->page->image = "https://" . $_SERVER['HTTP_HOST'] . "/" . $newsFolderName . "/" . $newsId . "/img.png";
                 }
 
                 /* Aggiornamento descrizione */
@@ -221,13 +221,13 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
             $newsFolderName = "news";
         }
 
-        /* Aggiornamento informazioni pagina in caso di news singola */
-        if (((isset($_GET['news']) && intval($_GET['news'])) or ($this->page->getPageLastSubLink() and $this->getNewsIdFromPermalink($this->page->getPageLastSubLink()))) and ($this->newsMode != "previewonly")) {
+        /* If show one news, update the page SEO settings */
+        if (((isset($_GET['news']) && intval($_GET['news'])) || ($this->page->getPageLastSubLink() && $this->getNewsIdFromPermalink($this->page->getPageLastSubLink()))) && ($this->newsMode != "previewonly")) {
 
             /* Recupero dati news */
             $language = $this->page->language;
 
-            // Lettura ID news
+            // Read the news ID
             if (isset($this->page->getVariables['news'])) {
                 $newsId = intval($this->page->getVariables['news']);
             } else {
@@ -244,20 +244,36 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                 $this->page->getVariables['gId'] = $news->getGalleryId();
             }
 
-            if ((!$this->disableSeoTags) or ( $this->disableSeoTags = "")) {
-                /* Aggiornamento title */
-                if (($news->getTitle($language)) and ( $news->getTitle($language) != "")) {
-                    $this->page->title .= " - " . $newsXML->TITLE->$language;
+            // Update the page canonical URL
+            $this->page->canonicalRequestUri .= $this->getPermalinkWithId($newsId, $news->getTitle($this->page->getPageLanguage())) . "/";
+
+            if ((!$this->disableSeoTags) || ( $this->disableSeoTags = "")) {
+                /* Update the page title */
+                if (($news->getTitle($language)) && ($news->getTitle($language) != "")) {
+                    $this->page->title = $newsXML->TITLE->$language;
                 }
 
-                /* Aggiornamento immagine */
+                /* Update the page image */
                 if (file_exists("../" . $newsFolderName . "/" . $newsId . "/img.png")) {
-                    $this->page->image = "http://" . $_SERVER['HTTP_HOST'] . "/" . $newsFolderName . "/" . $newsId . "/img.png";
+                    $this->page->image = "https://" . $_SERVER['HTTP_HOST'] . "/" . $newsFolderName . "/" . $newsId . "/img.png";
                 }
 
-                /* Aggiornamento descrizione */
+                /* Update the page description */
                 $this->page->description = str_replace('"', "", $news->getTitle($language));
             }
+        }
+
+        // If the tag filter is set, update page SEO settings
+        if (isset($this->page->getVariables['nt']) && ($this->page->getVariables['nt'] != "")) {
+            $newsTagFilter = strtolower(urldecode($this->page->getVariables['nt']));
+            switch ($this->page->getPageLanguage()) {
+                case "it":
+                    $this->page->title = "Articoli relativi a " . $newsTagFilter;
+                    break;
+                default:
+                    $this->page->title = "Articles about " . $newsTagFilter;
+            }
+            $this->page->canonicalRequestUri .= urlencode($newsTagFilter) . "/?nt=" . urlencode($newsTagFilter);
         }
     }
 
@@ -286,11 +302,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         } else {
             $href = "";
         }
-        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
-            $homeFolder = "https://" . $_SERVER['HTTP_HOST'] . "/";
-        } else {
-            $homeFolder = "http://" . $_SERVER['HTTP_HOST'] . "/";
-        }
+        $homeFolder = "https://" . $_SERVER['HTTP_HOST'] . "/";
 
         // Lettura ID news
         if (isset($this->page->getVariables['news'])) {
@@ -301,13 +313,14 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         if (!$newsId) {
             $newsId = $this->getNewsIdFromPermalink($this->page->getPageLastSubLink());
         }
-        // Lettura filtro tag
+
+        // Read the tag filter
         if (isset($this->page->getVariables['nt']) && ($this->page->getVariables['nt'] != "")) {
-            $newsTagFilter = urldecode($this->page->getVariables['nt']);
+            $newsTagFilter = strtolower(urldecode($this->page->getVariables['nt']));
         }
 
         // Preview mode
-        if ((!$newsId) or ($this->newsMode == "previewonly")) {
+        if ((!$newsId) || ($this->newsMode == "previewonly")) {
             $articleBlockWidth = intval(100 / $this->newsColumns);
             
             if (isset($this->page->getVariables['np'])) {
@@ -337,7 +350,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                     if (isset($newsTagFilter)) {
                         $tagFounded = 0;
                         foreach ($news->getTags() as $tag) {
-                            if ($tag == $newsTagFilter) {
+                            if (strtolower($tag) == $newsTagFilter) {
                                 $tagFounded = 1;
                                 break;
                             }
@@ -377,7 +390,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                             }
                             echo '>';
                             echo '<article itemscope itemtype="http://schema.org/NewsArticle" vocab="http://schema.org/" typeof="NewsArticle" style="width:' .  $articleBlockWidth . '% ;" >';
-                                echo '<meta itemscope itemprop="mainEntityOfPage" itemType="https://schema.org/WebPage" property="mainEntityOfPage" vocab="http://schema.org/" typeof="WebPage" itemid="' . $homeFolder . $_SERVER['REQUEST_URI'] . $href . $this->getPermalinkWithId($newsId, $news->getTitle($language)) . '/"/>';
+                                echo '<meta itemscope itemprop="mainEntityOfPage" itemType="https://schema.org/WebPage" property="mainEntityOfPage" vocab="http://schema.org/" typeof="WebPage" itemid="' . $this->page->getCanonicalUrl() . '"/>';
                                 echo '<meta itemprop="datePublished" property="datePublished" content="' . date("Y-m-d", intval($newsId)) . '" />';
                                 echo '<meta itemprop="dateModified" property="dateModified" content="' . date("Y-m-d", intval($newsId)) . '" />';
                                 if ($news->getAuthor()) {
@@ -476,7 +489,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
             }
             echo '<div class="' . $this->elementPlugin . '_' . $this->elementClass .'_mode_view ' . $this->cssClass . '">';
                 echo '<article itemscope itemtype="http://schema.org/NewsArticle" vocab="http://schema.org/" typeof="NewsArticle">';
-                    echo '<meta itemscope itemprop="mainEntityOfPage" itemType="https://schema.org/WebPage" property="mainEntityOfPage" vocab="http://schema.org/" typeof="WebPage" itemid="' . $homeFolder . $_SERVER['REQUEST_URI'] . '"/>';
+                    echo '<meta itemscope itemprop="mainEntityOfPage" itemType="https://schema.org/WebPage" property="mainEntityOfPage" vocab="http://schema.org/" typeof="WebPage" itemid="' . $this->page->getCanonicalUrl() . '"/>';
                     echo '<meta itemprop="datePublished" property="datePublished" content="' . date("Y-m-d", intval($newsId)) . '" />';
                     echo '<meta itemprop="dateModified" property="dateModified" content="' . date("Y-m-d", intval($newsId)) . '" />';
                     
