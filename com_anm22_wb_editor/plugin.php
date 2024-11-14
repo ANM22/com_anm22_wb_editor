@@ -2,8 +2,7 @@
 /**
  * Plugin main file
  * 
- * @author ANM22
- * @copyright 2023 Paname srl
+ * @author Andrea Menghi <andrea.menghi@anm22.it>
  */
 
 /* HTML */

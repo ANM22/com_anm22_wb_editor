@@ -2,7 +2,7 @@
 /**
  * News plugin
  *
- * @copyright 2024 Paname srl
+ * @author Andrea Menghi <andrea.menghi@anm22.it>
  */
 class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_element
 {
@@ -581,8 +581,18 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         return $id . "-" . $clean;
     }
 
-    private function getNewsIdFromPermalink($perma) {
-        $split = explode("-", $perma);
+    /**
+     * Method to get news ID from permalink.
+     * 
+     * @param string $permalink Permalink to analyze
+     * @return int|null
+     */
+    private function getNewsIdFromPermalink($permalink) {
+        if (is_null($permalink)) {
+            return null;
+        }
+
+        $split = explode("-", $permalink);
         return intval($split[0]);
     }
 

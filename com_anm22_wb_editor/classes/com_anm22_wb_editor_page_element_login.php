@@ -1,29 +1,62 @@
 <?php
-/*
- * Author: ANM22
- * Last modified: 17 Jan 2017 - GMT +1 00:07
+
+/**
+ * Login plugin for ANM22 WebBase CMS
  *
- * ANM22 Andrea Menghi all rights reserved
- *
+ * @author Andrea Menghi <andrea.menghi@anm22.it>
  */
 
 /* LOGIN MODULE */
 
-class com_anm22_wb_editor_page_element_login extends com_anm22_wb_editor_page_element {
+class com_anm22_wb_editor_page_element_login extends com_anm22_wb_editor_page_element
+{
 
     var $elementClass = "com_anm22_wb_editor_page_element_login";
     var $elementPlugin = "com_anm22_wb_editor";
     var $callback_url;
+    public $cssClass;
 
-    function importXMLdoJob($xml) {
+    /**
+     * @deprecated since editor 3.0
+     * 
+     * Method to init the element.
+     * 
+     * @param SimpleXMLElement $xml Element data
+     * @return void
+     */
+    function importXMLdoJob($xml)
+    {
         $this->callback_url = htmlspecialchars_decode($xml->callback_url);
+        if (isset($xml->cssClass)) {
+            $this->cssClass = htmlspecialchars_decode($xml->cssClass);
+        }
     }
 
-    function show() {
+    /**
+     * Method to init the element.
+     * 
+     * @param mixed[] $data Element data
+     * @return void
+     */
+    public function initData($data)
+    {
+        $this->callback_url = htmlspecialchars_decode($data['callback_url']);
+        if (isset($data['cssClass'])) {
+            $this->cssClass = htmlspecialchars_decode($data['cssClass']);
+        }
+    }
+
+    /**
+     * Render the page element
+     * 
+     * @return void
+     */
+    function show()
+    {
         include "../ANM22WebBase/config/license.php";
         ?>
-        <div class="<?= $this->elementPlugin ?>_<?= $this->elementClass ?><? if (($this->cssClass)and ( $this->cssClass != "")) { ?> <?= $this->cssClass ?><? } ?>">
-            <form action="http://www.anm22.it/app/webbase/api/api-1-0.php?action=user_login&method=post" method="post">
+        <div class="<?= $this->elementPlugin ?>_<?= $this->elementClass ?><?= ($this->cssClass && $this->cssClass != "") ? $this->cssClass : "" ?>">
+            <form action="https://webbase.anm22.it/app/webbase/api/api-1-0.php?action=user_login&method=post" method="post">
                 Email: <input type="email" name="email" />
                 Password: <input type="password" name="password" />
                 <input type="submit" value="Log in" />
@@ -35,5 +68,4 @@ class com_anm22_wb_editor_page_element_login extends com_anm22_wb_editor_page_el
         </div>
         <?
     }
-
 }
