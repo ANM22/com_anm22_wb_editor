@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Menu plugin
+ * Menu plugin for ANM22 WebBase CMS
  *
- * @copyright 2024 Paname srl
+ * @author Andrea Menghi <andrea.menghi@anm22.it>
  */
 class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_element
 {
@@ -80,7 +80,7 @@ class com_anm22_wb_editor_page_element_menu extends com_anm22_wb_editor_page_ele
             $pageIndexObject->initData($jsonPagesIndex);
         } else if (file_exists("../ANM22WebBase/website/pages.xml")) {
             $xmlPagesIndex = simplexml_load_file("../ANM22WebBase/website/pages.xml");
-            $jsonPagesIndex = WebBaseXmlLogics::xmlToAssoc($xmlPagesIndex);
+            $jsonPagesIndex = WebBaseXmlLogics::pagesIndexXmlToAssoc($xmlPagesIndex);
             $pageIndexObject->initData($jsonPagesIndex);
         }
         $websitePages = [];
