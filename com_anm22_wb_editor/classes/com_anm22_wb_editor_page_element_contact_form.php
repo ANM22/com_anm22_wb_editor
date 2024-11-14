@@ -68,7 +68,9 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
         $this->sendPeriod = $data['sendPeriod'];
         $this->email = $data['email'];
         $this->privacy_url = htmlspecialchars_decode($data['privacy_url']);
-        $this->adwordsScript = htmlspecialchars_decode($data['adwordsScript']);
+        if ($data['adwordsScript']) {
+            $this->adwordsScript = htmlspecialchars_decode($data['adwordsScript']);
+        }
         $this->cssClass = $data['cssClass'];
         $this->inputName = $data['inputName'];
         $this->inputSurname = $data['inputSurname'];
@@ -241,9 +243,8 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
             if (isset($_GET['wb_form_ok']) and $_GET['wb_form_ok']) {
                 ?>
                 <div class="form_response_confirm">La tua richiesta &egrave; stata inoltrata correttamente. Ti risponderemo il prima possibile.</div>
-                <!-- Google Code for Preiscrizione YourBeach Conversion Page -->
                 <?
-                if ($this->adwordsScript != "") {
+                if ($this->adwordsScript && $this->adwordsScript != "") {
                     ?>
                     <?= $this->adwordsScript ?>
                     <?
@@ -252,7 +253,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
             ?>
             <script src="<?= $this->page->getHomeFolderRelativeHTMLURL() ?>ANM22WebBase/website/plugins/<?= $this->elementPlugin ?>/js/validation.js?v=1"></script>
             <?
-            if ($this->title != "") {
+            if ($this->title && $this->title != "") {
                 echo '<' . $this->getHeadingTag() . ' class="form-title">' . $this->title . '</' . $this->getHeadingTag() . '>';
             }
             ?>
