@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Box plugin
+ * Box plugin for ANM22 WebBase CMS
  *
- * @copyright 2024 Paname srl
+ * @author Andrea Menghi <andrea.menghi@anm22.it>
  */
 
 class com_anm22_wb_editor_page_element_box extends com_anm22_wb_editor_page_element
@@ -77,8 +77,8 @@ class com_anm22_wb_editor_page_element_box extends com_anm22_wb_editor_page_elem
 
                         if (((string) $defaultContainer['id']) == $containerId) {
 
-                            if ($defaultContainer->item) {
-                                foreach ($defaultContainer->item as $item) {
+                            if ($defaultContainer['items']) {
+                                foreach ($defaultContainer['items'] as $item) {
                                     $containerElements[] = "d" . intval($item);
                                 }
                             }
