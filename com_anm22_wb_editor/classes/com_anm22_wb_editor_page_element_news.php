@@ -51,7 +51,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
      */
     public function importXMLdoJob($xml)
     {
-        require_once '../ANM22WebBase/website/plugins/com_anm22_wb_editor/classes/WBNews.php';
+        require_once __DIR__ . '/WBNews.php';
         
         if (isset($xml->cssClass)) {
             $this->cssClass = $xml->cssClass;
@@ -157,14 +157,14 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
      */
     public function initData($data)
     {
-        require_once '../ANM22WebBase/website/plugins/com_anm22_wb_editor/classes/WBNews.php';
+        require_once __DIR__ . '/WBNews.php';
         
-        if (isset($xml->cssClass)) {
+        if ($data['cssClass'] ?? false) {
             $this->cssClass = $data['cssClass'];
         }
         
         $this->title = $data['title'] ?? null;
-        if (isset($data['headingTag'])) {
+        if ($data['headingTag'] ?? false) {
             $this->headingTag = $data['headingTag'];
         }
         $this->newsShowLink = $data['newsShowLink'] ?? null;
@@ -181,7 +181,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         $this->newsRows = intval($data['newsRows'] ?? 0);
         $this->newsColumns = intval($data['newsColumns'] ?? 0);
         $this->newsTitle = intval($data['newsTitle'] ?? 0);
-        if (isset($xml->newsHeadingTag)) {
+        if ($data['newsHeadingTag'] ?? false) {
             $this->newsHeadingTag = $data['newsHeadingTag'];
         }
         $this->newsViewSubtitle = intval($data['newsViewSubtitle'] ?? 0);
@@ -191,7 +191,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
         $this->newsViewDate = $data['newsViewDate'] ?? null;
         $this->newsViewGalleryMode = intval($data['newsViewGalleryMode'] ?? 0);
         $this->newsViewTags = intval($data['newsViewTags'] ?? 0);
-        if (isset($data['newsTagsPageUrl'])) {
+        if ($data['newsTagsPageUrl'] ?? false) {
             if (is_string($data['newsTagsPageUrl'])) {
                 $this->newsTagsPageUrl = htmlspecialchars_decode($data['newsTagsPageUrl']);
             } else {
@@ -199,7 +199,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
             }
         }
 
-        if (isset($data['newsPreviewHeadingTag'])) {
+        if ($data['newsPreviewHeadingTag'] ?? false) {
             $this->newsPreviewHeadingTag = $data['newsPreviewHeadingTag'];
         }
         $this->newsPreviewDate = $data['newsPreviewDate'] ?? null;
@@ -285,7 +285,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
     public function show()
     {
         
-        require_once '../ANM22WebBase/website/plugins/com_anm22_wb_editor/classes/WBNews.php';
+        require_once __DIR__ . '/WBNews.php';
         
         // Identifico la cartella delle news
         if (file_exists("../News/")) {
@@ -407,8 +407,10 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                                 echo '<div itemprop="publisher" itemscope itemtype="https://schema.org/Organization" property="publisher" vocab="http://schema.org/" typeof="Organization" style="display:none !important;">';
                                     echo '<div itemprop="logo" itemscope itemtype="https://schema.org/ImageObject" property="logo" vocab="http://schema.org/" typeof="ImageObject">';
                                         echo '<meta itemprop="url" property="url" content="https://www.anm22.it/app/webbase/images/newsPublisher/' . $news->getPublisherId() . '.png">';
-                                        echo '<meta itemprop="width" property="width" content="' . $size[0] . '">';
-                                        echo '<meta itemprop="height" property="height" content="' . $size[1] . '">';
+                                        if ($size) {
+                                            echo '<meta itemprop="width" property="width" content="' . $size[0] . '">';
+                                            echo '<meta itemprop="height" property="height" content="' . $size[1] . '">';
+                                        }
                                     echo '</div>';
                                     echo '<div itemprop="name" property="name">' . $news->getPublisherName() . '</div>';
                                 echo '</div>';
@@ -512,7 +514,7 @@ class com_anm22_wb_editor_page_element_news extends com_anm22_wb_editor_page_ele
                         echo '</div>';
                         echo '<div itemprop="name" property="name">' . $news->getPublisherName() . '</div>';
                     echo '</div>';
-                    echo '<' . $this->newsHeadingTag . ' itemprop="headline" property="headline">' . $news->getTitle($language) . '</' . $this->newsHeadingTag . '>';
+                    echo '<' . $this->newsHeadingTag . ' itemprop="headline" property="headline" ref="">' . $news->getTitle($language) . '</' . $this->newsHeadingTag . '>';
                     if ($this->newsViewSubtitle) {
                         echo '<h2 itemprop="alternativeHeadline" property="alternativeHeadline">' . $news->getSubtitle($language) . '</h2>';
                     }
