@@ -7,6 +7,13 @@
 class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_page_element
 {
 
+    const FORM_MODE_GENERIC = 0;
+    const FORM_MODE_HOTEL = 1;
+    const FORM_MODE_CALL_ME = 2;
+
+    const SENDER_MODE_BASIC = 0;
+    const SENDER_MODE_CRM = 1;
+
     var $elementClass = "com_anm22_wb_editor_page_element_contact_form";
     var $elementPlugin = "com_anm22_wb_editor";
     var $email;
@@ -23,6 +30,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
     var $inputNote;
     var $formMode;
     protected $fromEmailAddress;
+    public $senderMode = 0;
 
     /**
      * @deprecated since editor 3.0
@@ -51,6 +59,9 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
         }
         if (isset($xml->fromEmailAddress)) {
             $this->fromEmailAddress = htmlspecialchars_decode($xml->fromEmailAddress);
+        }
+        if ($xml->senderMode ?? false) {
+            $this->senderMode = intval($xml->senderMode);
         }
 
         $this->sendForm();
@@ -84,6 +95,9 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
         if (isset($data['fromEmailAddress'])) {
             $this->fromEmailAddress = htmlspecialchars_decode($data['fromEmailAddress']);
         }
+        if ($data['senderMode'] ?? false) {
+            $this->senderMode = intval($data['senderMode']);
+        }
 
         $this->sendForm();
     }
@@ -101,7 +115,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
                 exit;
             }
 
-            if (!$this->email or ($this->email == "")) {
+            if (!$this->email || ($this->email == "")) {
                 header("Location: ?wb_form_alarm=3");
                 exit;
             }
@@ -111,13 +125,13 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
                 exit;
             }
 
-            include_once "../ANM22WebBase/website/plugins/com_anm22_wb_editor/mailFunctions.php";
+            include_once __DIR__ . "/../mailFunctions.php";
 
             $obj = $_SERVER['HTTP_HOST'] . " - Richiesta informazioni da " . $_POST['fname'] . " " . $_POST['lname'];
             $from = $_POST['email'];
             $to = $this->email;
             
-            if ($this->formMode == "1") {
+            if ($this->formMode == self::FORM_MODE_HOTEL) {
 
                 $msg = "Richiesta informazioni da parte di: " . $_POST['fname'] . " " . $_POST['lname'] . "\n";
                 $msg .= "Email: " . $_POST['email'] . "\n";
@@ -157,61 +171,74 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
             } else {
                 $fromEmailAddress = $from;
             }
-            if (com_anm22_wb_mail_send($fromEmailAddress, $to, "", "", $obj, $msg, "plain", $from)) {
-                
-                include "../ANM22WebBase/config/license.php";
-                
-                // BeTasker Contacts integration
-                $data = array();
-                $data['firstName'] = $_POST['fname'];
-                $data['lastName'] = $_POST['lname'];
-                $data['email'] = $from;
-                $data['phoneNumber'] = $_POST['phone'];
-                $data['obj'] = $obj;
-                $data['msg'] = $msg;
-                $data['tracking'] = array();
-                
-                // Tracking code
-                $trackingCode = "\n\nPagina: " . $this->page->getPageLink() . "";
-                $data['tracking']['page'] = $this->page->getPageLink();
-                if (isset($_COOKIE['wb_utm_campaign'])) {
-                    $trackingCode .= "\nutm_campaign: " . $_COOKIE['wb_utm_campaign'];
-                    $data['tracking']['utm_campaign'] = $_COOKIE['wb_utm_campaign'];
-                }
-                if (isset($_COOKIE['wb_utm_medium'])) {
-                    $trackingCode .= "\nutm_medium: " . $_COOKIE['wb_utm_medium'];
-                    $data['tracking']['utm_medium'] = $_COOKIE['wb_utm_medium'];
-                }
-                if (isset($_COOKIE['wb_utm_source'])) {
-                    $trackingCode .= "\nutm_source: " . $_COOKIE['wb_utm_source'];
-                    $data['tracking']['utm_source'] = $_COOKIE['wb_utm_source'];
-                }
-                if (isset($_COOKIE['wb_utm_content'])) {
-                    $trackingCode .= "\nutm_content: " . $_COOKIE['wb_utm_content'];
-                    $data['tracking']['utm_content'] = $_COOKIE['wb_utm_content'];
-                }
-                if (isset($_COOKIE['wb_gclid'])) {
-                    $trackingCode .= "\ngclid: " . $_COOKIE['wb_gclid'];
-                    $data['tracking']['gclid'] = $_COOKIE['wb_gclid'];
-                }
-                if (isset($_COOKIE['wb_cmp'])) {
-                    $trackingCode .= "\ncmp: " . $_COOKIE['wb_cmp'];
-                    $data['tracking']['cmp'] = $_COOKIE['wb_cmp'];
-                }
-                $data['msg'] .= $trackingCode;
 
-                $data_string = json_encode($data);
+            $senderError = false;
+            if ($this->senderMode == self::SENDER_MODE_BASIC) {
+                $mailSenderResult = com_anm22_wb_mail_send($fromEmailAddress, $to, "", "", $obj, $msg, "plain", $from);
+                if (!$mailSenderResult) {
+                    $senderError = true;
+                }
+            }
 
-                $ch = curl_init('https://www.anm22.it/app/webbase/api/v2/messages/?license=' . $anm22_wb_license . '&licensePass=' . $anm22_wb_licensePass);                                                                      
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);                                                                  
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);                                                                      
-                curl_setopt($ch, CURLOPT_HTTPHEADER, array(                                                                          
-                    'Content-Type: application/json',                                                                                
-                    'Content-Length: ' . strlen($data_string))                                                                       
-                );
-                $result = curl_exec($ch);
+            include "../ANM22WebBase/config/license.php";
                 
+            // BeTasker Contacts integration
+            $data = [];
+            $data['firstName'] = $_POST['fname'];
+            $data['lastName'] = $_POST['lname'];
+            $data['email'] = $from;
+            $data['phoneNumber'] = $_POST['phone'];
+            $data['obj'] = $obj;
+            $data['msg'] = $msg;
+            $data['tracking'] = [];
+            
+            // Tracking code
+            $trackingCode = "\n\nPagina: " . $this->page->getPageLink() . "";
+            $data['tracking']['page'] = $this->page->getPageLink();
+            if (isset($_COOKIE['wb_utm_campaign'])) {
+                $trackingCode .= "\nutm_campaign: " . $_COOKIE['wb_utm_campaign'];
+                $data['tracking']['utm_campaign'] = $_COOKIE['wb_utm_campaign'];
+            }
+            if (isset($_COOKIE['wb_utm_medium'])) {
+                $trackingCode .= "\nutm_medium: " . $_COOKIE['wb_utm_medium'];
+                $data['tracking']['utm_medium'] = $_COOKIE['wb_utm_medium'];
+            }
+            if (isset($_COOKIE['wb_utm_source'])) {
+                $trackingCode .= "\nutm_source: " . $_COOKIE['wb_utm_source'];
+                $data['tracking']['utm_source'] = $_COOKIE['wb_utm_source'];
+            }
+            if (isset($_COOKIE['wb_utm_content'])) {
+                $trackingCode .= "\nutm_content: " . $_COOKIE['wb_utm_content'];
+                $data['tracking']['utm_content'] = $_COOKIE['wb_utm_content'];
+            }
+            if (isset($_COOKIE['wb_gclid'])) {
+                $trackingCode .= "\ngclid: " . $_COOKIE['wb_gclid'];
+                $data['tracking']['gclid'] = $_COOKIE['wb_gclid'];
+            }
+            if (isset($_COOKIE['wb_cmp'])) {
+                $trackingCode .= "\ncmp: " . $_COOKIE['wb_cmp'];
+                $data['tracking']['cmp'] = $_COOKIE['wb_cmp'];
+            }
+            $data['msg'] .= $trackingCode;
+
+            // Send notification command
+            if ($this->senderMode == self::SENDER_MODE_CRM) {
+                $data["sendNotification"] = true;
+            }
+
+            $data_string = json_encode($data);
+
+            $ch = curl_init('https://webbase.anm22.it/app/webbase/api/v2/messages/?license=' . $anm22_wb_license . '&licensePass=' . $anm22_wb_licensePass);                                                                      
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);                                                                  
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);                                                                      
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [                                                                          
+                'Content-Type: application/json',                                                                                
+                'Content-Length: ' . strlen($data_string)]                                                                    
+            );
+            $result = curl_exec($ch);
+
+            if (!$senderError) {
                 header("Location: ?wb_form_ok=1");
                 exit;
             } else {
@@ -231,16 +258,16 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
         ?>
         <div class="<?= $this->elementPlugin ?>_<?= $this->elementClass ?><? if (($this->cssClass)and ( $this->cssClass != "")) { ?> <?= $this->cssClass ?><? } ?>">
             <?
-            if (isset($_GET['wb_form_alarm']) and ($_GET['wb_form_alarm'] == 2)) {
+            if (isset($_GET['wb_form_alarm']) && ($_GET['wb_form_alarm'] == 2)) {
                 ?>
                 <div class="form_response_alarm">Non &egrave; stato inserito correttamente l'indirizzo email.</div>
                 <?
-            } else if (isset($_GET['wb_form_alarm']) and $_GET['wb_form_alarm']) {
+            } else if ($_GET['wb_form_alarm'] ?? false) {
                 ?>
                 <div class="form_response_alarm">Ops! Non &egrave; stato possibile inviare la tua richiesta, riprova pi&ugrave; tardi.</div>
                 <?
             }
-            if (isset($_GET['wb_form_ok']) and $_GET['wb_form_ok']) {
+            if ($_GET['wb_form_ok'] ?? false) {
                 ?>
                 <div class="form_response_confirm">La tua richiesta &egrave; stata inoltrata correttamente. Ti risponderemo il prima possibile.</div>
                 <?
@@ -271,7 +298,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
                     <input id="form-email" type="email" name="email" autocomplete="email" />
                 </div>
                 <?
-                if ($this->formMode == "1") {
+                if ($this->formMode == self::FORM_MODE_HOTEL) {
                     ?>
                     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
                     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
