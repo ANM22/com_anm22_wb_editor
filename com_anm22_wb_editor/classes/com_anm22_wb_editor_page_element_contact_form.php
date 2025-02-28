@@ -1,8 +1,6 @@
 <?php
 /**
  * Contact form plugin
- *
- * @copyright 2024 Paname srl
  */
 class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_page_element
 {
@@ -224,6 +222,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
             // Send notification command
             if ($this->senderMode == self::SENDER_MODE_CRM) {
                 $data["sendNotification"] = true;
+                $data["sendNotificationTo"] = $this->email;
             }
 
             $data_string = json_encode($data);
@@ -256,7 +255,7 @@ class com_anm22_wb_editor_page_element_contact_form extends com_anm22_wb_editor_
     public function show()
     {
         ?>
-        <div class="<?= $this->elementPlugin ?>_<?= $this->elementClass ?><? if (($this->cssClass)and ( $this->cssClass != "")) { ?> <?= $this->cssClass ?><? } ?>">
+        <div class="<?= $this->elementPlugin ?>_<?= $this->elementClass ?><? if ($this->cssClass && $this->cssClass != "") { ?> <?= $this->cssClass ?><? } ?>">
             <?
             if (isset($_GET['wb_form_alarm']) && ($_GET['wb_form_alarm'] == 2)) {
                 ?>
